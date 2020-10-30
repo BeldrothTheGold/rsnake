@@ -14,9 +14,6 @@ impl Block {
     pub fn to_coords(&self) -> (f64, f64) {
         crate::draw::to_coord(self.x, self.y)
     }
-    pub fn to_pixels(&self) -> (u32, u32) {
-        (self.x * BLOCK_SIZE, self.y * BLOCK_SIZE)
-    }
     pub fn draw(&self, color: Color, con: &Context, g: &mut G2d) {
         let (gui_x, gui_y) = self.to_coords();
         rectangle(
@@ -30,9 +27,6 @@ impl Block {
 
 pub fn to_coord(x: u32, y: u32) -> (f64, f64) {
     ((x * BLOCK_SIZE) as f64, (y * BLOCK_SIZE) as f64)
-}
-pub fn to_coord_u32(x: u32, y: u32) -> (u32, u32) {
-    (x * BLOCK_SIZE, y * BLOCK_SIZE)
 }
 
 pub struct Rectangle {
