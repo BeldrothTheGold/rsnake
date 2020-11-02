@@ -92,14 +92,16 @@ impl Snake {
     pub fn direction(&self) -> Direction {
         self.direction.clone()
     }
-    pub fn set_direction(&mut self, dir: Direction)  {
-        self.direction = dir;
-    }
     pub fn grow(&mut self) {
         self.len += 1;
     }
     pub fn check_collide_tail(&self, block: &Block) -> bool {
         let head = self.head();
+        if let Some(tail) = self.body.back() {
+            if tail == block {
+                return false;
+            }
+        }
         for bl in &self.body {
             if bl == head {
                 continue;

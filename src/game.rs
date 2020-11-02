@@ -2,6 +2,7 @@ use crate::draw::{Block, Rectangle};
 use crate::snake::{Direction, Snake};
 use piston_window::{types::Color, *};
 use rand::{thread_rng, Rng};
+use std::collections::VecDeque;
 
 const BOARD_COLOR: Color = [0.5, 0.5, 0.5, 1.0];
 const FOOD_COLOR: Color = [0.0, 0.0, 0.85, 1.0];
@@ -13,16 +14,16 @@ const RESTART_TIME: f64 = 0.5;
 
 const SNAKE_START_X: u32 = 2;
 const SNAKE_START_Y: u32 = 2;
-const SNAKE_START_LEN: u32 = 5;
+const SNAKE_START_LEN: u32 = 4;
 const SNAKE_START_DIR: Direction = Direction::Right;
 
 pub struct Game {
     snake: Snake,
+    move_queue: VecDeque<Direction>,
     food: Option<Block>,
     window_rect: Rectangle,
     game_rect: Rectangle,
     game_over: bool,
-    pending_change: bool,
     waiting_time: f64,
     food_time: f64,
 }
@@ -36,11 +37,11 @@ impl Game {
                 SNAKE_START_LEN,
                 SNAKE_START_DIR,
             ),
+            move_queue: VecDeque::new(),
             food: None,
             window_rect: Rectangle::new(0, 0, width, height),
             game_rect: Rectangle::new(1, 1, width - 2, height - 2),
             game_over: false,
-            pending_change: false,
             waiting_time: 0.0,
             food_time: FOOD_DELAY,
         }
@@ -64,12 +65,11 @@ impl Game {
 
         if self.waiting_time > MOVE_DELAY {
             self.waiting_time = 0.0;
-            self.update_snake(None);
+            self.update_snake();
         }
     }
 
     pub fn draw(&self, con: &Context, g: &mut G2d) {
-
         //draw game over
         if self.game_over {
             self.window_rect.draw(GAME_OVER_COLOR, con, g);
@@ -85,11 +85,10 @@ impl Game {
 
         //draw snake
         self.snake.draw(con, g);
-
     }
 
     pub fn key_pressed(&mut self, key: Key) {
-        if self.game_over || self.pending_change {
+        if self.game_over {
             return;
         }
 
@@ -106,11 +105,14 @@ impl Game {
         };
 
         if let Some(d) = dir {
-            if d == self.snake.direction().opposite() {
-                return;
+            if let Some(back) = self.move_queue.back() {
+                if d != back.opposite() {
+                    self.move_queue.push_back(d);
+                }
             } else {
-                self.snake.set_direction(d);
-                self.pending_change = true;
+                if d != self.snake.direction().opposite() {
+                    self.move_queue.push_back(d);
+                }
             }
         }
     }
@@ -133,8 +135,7 @@ impl Game {
 
     fn snake_alive(&self, dir: Option<Direction>) -> bool {
         let next_head = self.snake.next_head(dir);
-        self.game_rect.contains(&next_head)
-            && !self.snake.check_collide_tail(&next_head)
+        self.game_rect.contains(&next_head) && !self.snake.check_collide_tail(&next_head)
     }
 
     fn new_food(&mut self) {
@@ -149,8 +150,8 @@ impl Game {
             false
         }
     }
-    fn update_snake(&mut self, dir: Option<Direction>) {
-        self.pending_change = false;
+    fn update_snake(&mut self) {
+        let dir = self.move_queue.pop_front();
         if self.snake_alive(dir) {
             self.snake.move_fwd(dir);
             if self.snake_eating() {
@@ -169,7 +170,7 @@ impl Game {
             SNAKE_START_DIR,
         );
         self.game_over = false;
-        self.pending_change = false;
+        self.move_queue = VecDeque::new();
         self.waiting_time = 0.0;
         self.food = Some(self.gen_food());
     }
