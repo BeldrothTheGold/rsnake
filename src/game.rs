@@ -7,7 +7,7 @@ const BOARD_COLOR: Color = [0.5, 0.5, 0.5, 1.0];
 const FOOD_COLOR: Color = [0.0, 0.0, 0.85, 1.0];
 const GAME_OVER_COLOR: Color = [0.90, 0.0, 0.0, 0.8];
 
-const MOVE_DELAY: f64 = 0.05;
+const MOVE_DELAY: f64 = 0.10;
 const FOOD_DELAY: f64 = 0.5;
 const RESTART_TIME: f64 = 0.5;
 
@@ -98,6 +98,10 @@ impl Game {
             Key::Down => Some(Direction::Down),
             Key::Left => Some(Direction::Left),
             Key::Right => Some(Direction::Right),
+            Key::W => Some(Direction::Up),
+            Key::S => Some(Direction::Down),
+            Key::A => Some(Direction::Left),
+            Key::D => Some(Direction::Right),
             _ => None,
         };
 
